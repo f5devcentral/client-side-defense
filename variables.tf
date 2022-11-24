@@ -10,7 +10,7 @@ variable "api_key" {
 
 variable "api_url" {
 	type = string
-	default = "https://treino.console.ves.volterra.io/api"
+	default = "https://<<tenant>>.console.ves.volterra.io/api"
 }
 
 variable "namespace" {
@@ -25,7 +25,7 @@ variable "lbname" {
 
 variable "domain" {
 	type = string
-	default = "automation-csd.f5-hyd-demo.com"
+	default = "<domain>.com"
 }
 
 variable "originname" {
