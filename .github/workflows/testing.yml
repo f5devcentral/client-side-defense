@@ -1,0 +1,43 @@
+
+name: 'Testing'
+
+on:
+  # push:
+    # branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+    
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  Testing:
+    name: 'CSD Testing'
+    runs-on: ubuntu-latest
+    environment: production
+
+    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@v3
+        
+    # install python tool
+    - uses: actions/setup-python@v3
+    
+    - name: Install software
+      run: sudo apt-get install google-chrome-stable
+        
+    - name: Install the necessary packages
+      run: pip3 install requests webdriver-manager selenium packaging
+    
+    # start CSD testing
+    - name: Test CSD 
+      run: python test_csd.py  
+  

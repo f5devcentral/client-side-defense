@@ -1,0 +1,141 @@
+
+name: 'Client-Side-Defense'
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+    
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  Deploy:
+    name: 'Deploy Infra'
+    runs-on: ubuntu-latest
+    environment: production
+
+    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@v3
+    
+    # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v1
+    
+    - name: Configure AWS Credentials 
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{secrets.AWS_ACCESS_KEY_ID}}
+        aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+        aws-session-token: ${{secrets.AWS_SESSION_TOKEN}}
+        aws-region: ${{secrets.AWS_DEFAULT_REGION}}
+        
+    # Move to Application directory and deploy application in cloud
+    - name: Deploy Application
+      run: |
+        cd application
+        terraform init
+        terraform plan -out=plan.out
+        terraform apply -auto-approve plan.out
+        echo pub_ip=$(terraform-bin output -raw ec2_public_ip) >> $GITHUB_ENV
+
+    - name: Upload application tfstate file
+      uses: actions/upload-artifact@v3
+      with:
+        name: tfstate1
+        path: application/terraform.tfstate
+          
+    - name: Deploy load balancer in F5 XC
+      run: |
+        terraform init
+        terraform plan -out=plan.out -var originip=${pub_ip}
+        terraform apply -auto-approve plan.out 
+
+    - name: Upload F5 XC resources tfstate file
+      uses: actions/upload-artifact@v3
+      with:
+        name: tfstate2
+        path: terraform.tfstate
+        
+  Testing:
+    name: 'CSD Testing'
+    runs-on: ubuntu-latest
+    environment: production
+    needs: Deploy
+
+    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@v3
+        
+    # install python tool
+    - uses: actions/setup-python@v3
+    
+    - name: Install software
+      run: sudo apt-get install google-chrome-stable
+        
+    - name: Install the necessary packages
+      run: pip3 install requests webdriver-manager selenium packaging
+    
+    # start CSD testing
+    - name: Test CSD 
+      run: python test_csd.py  
+      
+  Destroy:
+    needs: [Deploy, Testing]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+
+      - name: Configure AWS Credentials 
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{secrets.AWS_ACCESS_KEY_ID}}
+          aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+          aws-session-token: ${{secrets.AWS_SESSION_TOKEN}}
+          aws-region: ${{secrets.AWS_DEFAULT_REGION}}
+        
+      - name: Download application tfsate file
+        uses: actions/download-artifact@v3
+        with:
+          name: tfstate1
+          
+      - name: Destroy application infra in cloud
+        run: |
+          cp ./terraform.tfstate ./application/ 
+          cd application          
+          terraform init
+          terraform plan -destroy 
+          terraform destroy -auto-approve          
+
+      - name: Download F5 XC resources tfstate file
+        uses: actions/download-artifact@v3
+        with:
+          name: tfstate2
+          
+      - name: Destroy infra in F5 XC
+        run: |       
+          terraform init
+          terraform plan -destroy 
+          terraform destroy -auto-approve
+        
