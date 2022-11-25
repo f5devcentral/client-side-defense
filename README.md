@@ -1,4 +1,4 @@
-# F5® Distributed Cloud Platform Client-Side Defense (F5 XC CSD) Atuomation
+# F5® Distributed Cloud Platform Client-Side Defense (F5 XC CSD) Automation
 ---
 **Table of Contents:** <br />
 ---
@@ -37,7 +37,7 @@ The objective of this automation is to test basic `Client-Side-Defense` feature 
 
 **Prerequisites:**<br />
 ---
-1.	F5 Distributed Cloud account. Refer https://console.ves.volterra.io/signup for account creation <br />
+1.	F5 Distributed Cloud account. Refer https://console.ves.volterra.io/signup/start for account creation <br />
 2.	Create a F5 XC API Certificate and APIToken. Please see this page for generation: [https://docs.cloud.f5.com/docs/how-to/user-mgmt/credentials](https://docs.cloud.f5.com/docs/how-to/user-mgmt/credentials) <br />
 3.	Extract the certificate and the key from the .p12: <br />
 ```
