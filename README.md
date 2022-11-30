@@ -24,7 +24,7 @@ F5® Distributed Cloud Platform Client-Side Defense (F5 XC CSD) feature provides
 ---
 Article reference: https://community.f5.com/t5/technical-articles/javascript-supply-chains-magecart-and-f5-xc-client-side-defense/ta-p/296612 <br />
 
-The objective of this automation is to test basic `Client-Side-Defense` feature refered in above reference by implementing below steps: <br />
+The objective of this automation is to test deploy and test basic `Client-Side-Defense` feature using `Terraform` and `Python` by implementing below steps: <br />
 1.	Deploy a demo application in AWS which hosts a simple web login page which captures provided username and passwords and sends these details to a 3rd party malicious domain control server `c2-server.f5cloudbuilder.dev`. Check `application-code.html` file in application folder for more details.)<br />
 2.	Deploy origin pool and load balancer in F5 XC using above created backend server public IP <br />
 3.	Generate traffic by trying to login to web page using selenium UI automation <br />
