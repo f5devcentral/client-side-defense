@@ -89,7 +89,7 @@ def test_csd_flow(target, count, headless=True):
     transactions_found = False
     
     # check every 2 mins for new transactions 10 times
-    for iter_num in range(10):
+    for iter_num in range(20):
         time.sleep(120)
         endtime2 = int(time.time())
         starttime2 = endtime1 - 1800
